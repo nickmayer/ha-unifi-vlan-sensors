@@ -1073,8 +1073,14 @@ class UnifiVlanSensor(SensorEntity):
             identifiers={(DOMAIN, f"vlan-{site}-{vlan}")},
             manufacturer=ATTR_MANUFACTURER,
             model="UniFi VLAN",
-            name="Native VLAN" if vlan == VLAN_NATIVE else f"VLAN {vlan}",
+            name=self._device_name(),
         )
+
+    def _device_name(self) -> str:
+        """Return the name of the network, or a generic name if it is unknown."""
+        if network := self.hub.networks.get_by_vlan_key(self.vlan):
+            return network.name
+        return "Native VLAN" if self.vlan == VLAN_NATIVE else f"VLAN {self.vlan}"
 
     @property
     @override

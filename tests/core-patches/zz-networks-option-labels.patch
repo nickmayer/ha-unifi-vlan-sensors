@@ -1,0 +1,16 @@
+--- a/tests/components/unifi/test_config_flow.py
++++ b/tests/components/unifi/test_config_flow.py
+@@ -554,7 +554,12 @@
+         for key, value in more_options.schema.schema.items()
+         if key == CONF_VLAN_SENSORS
+     )
+-    assert vlan_selector.config["options"] == ["11", "20", "30", "native"]
++    assert vlan_selector.config["options"] == [
++        {"value": "11", "label": "11"},
++        {"value": "20", "label": "20"},
++        {"value": "30", "label": "30"},
++        {"value": "native", "label": "native"},
++    ]
+ 
+ 
+ @pytest.mark.parametrize(

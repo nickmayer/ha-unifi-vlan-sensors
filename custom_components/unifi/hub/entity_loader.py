@@ -67,6 +67,7 @@ class UnifiEntityLoader:
                 hub, hub.api.traffic_routes
             ),
             id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
+            id(hub.networks): UnifiDataUpdateCoordinator(hub, hub.networks),
         }
         self._data_coordinator_aliases: dict[int, int] = {
             id(hub.api.outlets): id(hub.api.devices),

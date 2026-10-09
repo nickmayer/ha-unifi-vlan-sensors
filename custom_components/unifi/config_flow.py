@@ -36,6 +36,7 @@ from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -375,11 +376,19 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             ssid for ssid in self.hub.config.option_ssid_filter if ssid in ssid_filter
         ]
 
+        vlan_labels = {
+            network.vlan_key: f"{network.name} ({network.vlan_key})"
+            for network in self.hub.networks.values()
+            if network.enabled and network.vlan_key is not None
+        }
         known_vlans = {
             get_client_vlan(client) for client in self.hub.api.clients.values()
         }
         known_vlans.update(self.options.get(CONF_VLAN_SENSORS, []))
-        vlan_options = sorted(known_vlans, key=_vlan_sort_key)
+        vlan_options = [
+            SelectOptionDict(value=vlan, label=vlan_labels.get(vlan, vlan))
+            for vlan in sorted(known_vlans | vlan_labels.keys(), key=_vlan_sort_key)
+        ]
 
         return self.async_show_form(
             step_id="init",

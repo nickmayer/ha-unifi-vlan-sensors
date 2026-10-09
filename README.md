@@ -8,7 +8,7 @@ It is a *drop-in replacement* for the built-in integration: same domain (`unifi`
 
 ## What you get
 
-Select the new option **VLANs to create sensors for** (UniFi → *Configure* → *More options*). The list suggests the VLANs your connected clients are on, and you can also type a VLAN ID that has no clients yet (for example `11`, `12`, `13`, `30`). For each VLAN you get a device **VLAN 11** with:
+Select the new option **VLANs to create sensors for** (UniFi → *Configure* → *More options*). The list shows every enabled network of your site by name (for example `noah_vlan11 (11)`), plus any other VLAN your clients are on. You can also type a VLAN ID. For each VLAN you get a device, named after the network (or `VLAN 11` if the network is unknown), with:
 
 | Entity | Meaning |
 | --- | --- |
@@ -29,6 +29,15 @@ Select `native` for clients without a VLAN tag (device `Native VLAN`, `sensor.na
 3. **Settings → Devices & services → UniFi Network → Configure → More options** and fill in *VLANs to create sensors for*.
 
 Home Assistant will log that it found a custom integration `unifi`; that is expected. To go back to the built-in integration, remove this from HACS and restart.
+
+### Networks handler
+
+`custom_components/unifi/hub/networks.py` adds a `Networks` handler for the controller's network configuration (`rest/networkconf`), which `aiounifi` does not have yet. It is written in aiounifi's style (a `Network` model, a request, an `APIHandler` subclass) and receives the controller's `networkconf:sync` websocket updates, so it can move into the library unchanged:
+
+1. add `models/network.py` and `interfaces/networks.py` to `aiounifi` (plus `Controller.networks`) with tests, as a pull request to the library;
+2. in the Home Assistant integration use `hub.api.networks` instead of `hub.networks` and drop the file here.
+
+It is used for the names in the options list and the device names; the sensors are still keyed by VLAN ID, so entity IDs do not depend on network names. If the controller reports no networks, everything falls back to plain VLAN IDs.
 
 ### Upgrading from `2026.10.0-vlan.1`
 
@@ -63,7 +72,7 @@ git push origin main upstream --tags                                 # the tag t
 The change is also prepared as a branch for Home Assistant core (`unifi-vlan-sensors`, based on `dev`). This repository carries it for the version you run:
 
 - `git diff upstream/<version> main -- custom_components/unifi` is the integration change. The only difference from the core branch is `_vlan_sensors_option` in `hub/config.py` (reads the text option of release 1), which is kept in its own commit and is not part of the proposal.
-- `tests/core-patches/unifi-vlan-sensors.patch` is the test change (new tests in `test_sensor.py` and `test_config_flow.py`, plus the snapshot); `tests/test_legacy_vlan_option.py` tests the shim.
+- `tests/core-patches/unifi-vlan-sensors.patch` is the test change (new tests in `test_sensor.py` and `test_config_flow.py`, plus the snapshot); `tests/test_legacy_vlan_option.py` tests the shim, and `tests/test_networks.py` with `tests/core-patches/conftest-network-payload.patch` and `zz-networks-option-labels.patch` test the networks handler (not part of the core PR).
 - `docs/home-assistant.io-unifi.patch` is the documentation change for the `home-assistant.io` repository.
 
 Home Assistant's [AI policy](https://developers.home-assistant.io/docs/ai_policy) requires that a person understands and submits the pull request and writes the description and replies themselves; autonomous contributions are not accepted.
