@@ -28,7 +28,6 @@ from ..const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONF_VLAN_SENSORS,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
@@ -38,26 +37,7 @@ from ..const import (
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DEFAULT_VLAN_SENSORS,
 )
-
-VLAN_NATIVE = "native"
-
-
-def parse_vlan_sensors(value: str) -> tuple[str, ...]:
-    """Parse the VLAN sensors option into VLAN keys.
-
-    The option is a comma or space separated list of VLAN IDs (1-4094) and/or
-    ``native`` for clients without a VLAN tag. Invalid entries are ignored.
-    """
-    vlans: dict[str, None] = {}
-    for token in value.replace(",", " ").split():
-        token = token.lower()
-        if token == VLAN_NATIVE:
-            vlans[VLAN_NATIVE] = None
-        elif token.isdecimal() and 1 <= int(token) <= 4094:
-            vlans[str(int(token))] = None
-    return tuple(vlans)
 
 
 @dataclass
@@ -106,8 +86,6 @@ class UnifiConfig:
     """Config entry option to allow bandwidth sensors."""
     option_allow_uptime_sensors: bool
     """Config entry option to allow uptime sensors."""
-    option_vlan_sensors: tuple[str, ...]
-    """Config entry option with VLAN IDs to create client count and traffic sensors for."""
 
     @classmethod
     def from_config_entry(cls, config_entry: ConfigEntry) -> Self:
@@ -147,8 +125,5 @@ class UnifiConfig:
             ),
             option_allow_uptime_sensors=options.get(
                 CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
-            ),
-            option_vlan_sensors=parse_vlan_sensors(
-                options.get(CONF_VLAN_SENSORS, DEFAULT_VLAN_SENSORS)
             ),
         )

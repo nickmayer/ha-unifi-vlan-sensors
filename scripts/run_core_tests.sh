@@ -20,12 +20,15 @@ rsync -a --delete \
   --exclude translations --exclude manifest.json --exclude __pycache__ \
   "$REPO/custom_components/unifi/" "$CORE/homeassistant/components/unifi/"
 
-# 2. our tests, plus the small changes our option needs in core's existing tests
-cp "$REPO"/tests/test_*.py "$CORE/tests/components/unifi/"
+# 2. pristine unifi tests of the core release this integration is based on, then ours
+CORE_REPO="${CORE_REPO:-/mnt/d/source/ha-core}"   # any core clone that has the tag
+CORE_REF="${CORE_REF:-2026.10.0}"
+rm -rf "$CORE/tests/components/unifi"
+git -C "$CORE_REPO" archive "$CORE_REF" tests/components/unifi | tar -x -C "$CORE"
 for patch_file in "$REPO"/tests/core-patches/*.patch; do
-  # -N: skip hunks that are already applied (script is re-runnable)
-  (cd "$CORE" && patch -p1 -N -s -r - < "$patch_file" >/dev/null || true)
+  (cd "$CORE" && patch -p1 -s < "$patch_file")
 done
+cp "$REPO"/tests/test_*.py "$CORE/tests/components/unifi/"
 
 # 3. regenerate the unifi translations from strings.json
 (cd "$CORE" && "$PY" -m script.translations develop --integration unifi >/dev/null)

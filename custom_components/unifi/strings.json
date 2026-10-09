@@ -162,12 +162,6 @@
       "ups_output_voltage": {
         "name": "Output voltage"
       },
-      "vlan_clients": {
-        "name": "Clients"
-      },
-      "vlan_traffic": {
-        "name": "Traffic"
-      },
       "wan_latency": {
         "name": "{target} {wan} latency"
       },
@@ -234,8 +228,7 @@
               "ignore_local_mac": "Ignore Wi-Fi clients with private (e.g. randomized) MAC addresses",
               "ignore_wired_bug": "Disable UniFi Network wired bug logic",
               "ssid_filter": "Select SSIDs to track wireless clients on",
-              "track_wired_clients": "Include wired network clients",
-              "vlan_sensors": "VLANs to create sensors for"
+              "track_wired_clients": "Include wired network clients"
             },
             "data_description": {
               "allow_bandwidth_sensors": "Create bandwidth usage sensors for network clients.",
@@ -246,8 +239,7 @@
               "ignore_local_mac": "Don't create entities for Wi-Fi clients whose MAC is locally administered (e.g. private/randomized Wi-Fi addresses). Wired clients are unaffected. Clients in \"Create entities from network clients\" are still included.",
               "ignore_wired_bug": "Disable workaround for a UniFi Network bug that sometimes reports wired clients as wireless.",
               "ssid_filter": "Only track wireless clients connected to selected SSIDs.",
-              "track_wired_clients": "Include wired clients in device tracking.",
-              "vlan_sensors": "VLAN IDs separated by commas (for example 11, 12, 30), or \"native\" for clients without a VLAN tag. Creates a connected clients sensor and a traffic sensor for each VLAN."
+              "track_wired_clients": "Include wired clients in device tracking."
             },
             "name": "More options"
           }

@@ -8,14 +8,14 @@ It is a *drop-in replacement* for the built-in integration: same domain (`unifi`
 
 ## What you get
 
-Set the new option **VLANs to create sensors for** (UniFi options → *More options*), for example `11, 12, 13, 30`. For each VLAN you get a device **VLAN 11** with:
+Select the new option **VLANs to create sensors for** (UniFi → *Configure* → *More options*). The list suggests the VLANs your connected clients are on, and you can also type a VLAN ID that has no clients yet (for example `11`, `12`, `13`, `30`). For each VLAN you get a device **VLAN 11** with:
 
 | Entity | Meaning |
 | --- | --- |
 | `sensor.vlan_11_clients` | Clients currently connected on VLAN 11 |
 | `sensor.vlan_11_traffic` | Their combined current traffic in Mbit/s (received + sent) |
 
-Use `native` for clients without a VLAN tag (device `Native VLAN`, `sensor.native_vlan_clients`).
+Select `native` for clients without a VLAN tag (device `Native VLAN`, `sensor.native_vlan_clients`).
 
 - The list is empty by default: **no new entities unless you ask for them.**
 - "Connected" uses the same rule as the integration's other sensors: the client was seen within the detection time.
@@ -29,6 +29,10 @@ Use `native` for clients without a VLAN tag (device `Native VLAN`, `sensor.nativ
 3. **Settings → Devices & services → UniFi Network → Configure → More options** and fill in *VLANs to create sensors for*.
 
 Home Assistant will log that it found a custom integration `unifi`; that is expected. To go back to the built-in integration, remove this from HACS and restart.
+
+### Upgrading from `2026.10.0-vlan.1`
+
+Release 1 saved the VLAN list as comma separated text. Release 2 still reads that format, so nothing breaks; open the options once and save to convert it to the new list.
 
 ## Versions
 
@@ -56,19 +60,27 @@ git push origin main upstream --tags                                 # the tag t
 
 ### Proposing it upstream
 
-`git diff upstream/<version> main -- custom_components/unifi` is the change relative to Home Assistant. Replace the path prefix `custom_components/unifi` with `homeassistant/components/unifi` to apply it to a core checkout; `tests/test_vlan_sensor.py` and `tests/core-patches/` hold the tests.
+The change is also prepared as a branch for Home Assistant core (`unifi-vlan-sensors`, based on `dev`). This repository carries it for the version you run:
+
+- `git diff upstream/<version> main -- custom_components/unifi` is the integration change. The only difference from the core branch is `_vlan_sensors_option` in `hub/config.py` (reads the text option of release 1), which is kept in its own commit and is not part of the proposal.
+- `tests/core-patches/unifi-vlan-sensors.patch` is the test change (new tests in `test_sensor.py` and `test_config_flow.py`, plus the snapshot); `tests/test_legacy_vlan_option.py` tests the shim.
+- `docs/home-assistant.io-unifi.patch` is the documentation change for the `home-assistant.io` repository.
+
+Home Assistant's [AI policy](https://developers.home-assistant.io/docs/ai_policy) requires that a person understands and submits the pull request and writes the description and replies themselves; autonomous contributions are not accepted.
 
 ## Development
 
 Home Assistant core only supports Linux/macOS. On Windows use WSL.
 
-```bash
-# one-time: a core checkout, a Python 3.14 venv with core's requirements and test
-# requirements, and `python -m script.translations develop --all` run once in the checkout.
-bash scripts/run_core_tests.sh      # copies this integration and tests/ into the checkout and runs the UniFi suite
-```
+| Script | Purpose |
+| --- | --- |
+| `scripts/run_core_tests.sh` | Copies this integration into a core checkout at the matching release and runs core's UniFi suite plus our tests |
+| `scripts/setup_core_dev.sh` | Prepares a checkout of core `dev` and the tools used by `pr_checks.sh` |
+| `scripts/pr_checks.sh` | The checks a core PR needs: tests with coverage of the new lines, ruff, mypy, pylint, hassfest, codespell |
+| `scripts/gen_translations.py` | Regenerates `translations/en.json` after editing `strings.json` |
+| `scripts/sync_upstream.py` | Imports a new Home Assistant release onto the `upstream` branch |
 
-The script keeps core's own manifest and regenerates translations, so the checkout always tests exactly what is in `custom_components/unifi/`.
+`run_core_tests.sh` keeps core's own manifest and regenerates translations, so it always tests exactly what is in `custom_components/unifi/`.
 
 ## License
 
