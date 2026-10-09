@@ -384,7 +384,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         known_vlans = {
             get_client_vlan(client) for client in self.hub.api.clients.values()
         }
-        known_vlans.update(self.options.get(CONF_VLAN_SENSORS, []))
+        known_vlans.update(self.hub.config.option_vlan_sensors)
         vlan_options = [
             SelectOptionDict(value=vlan, label=vlan_labels.get(vlan, vlan))
             for vlan in sorted(known_vlans | vlan_labels.keys(), key=_vlan_sort_key)
@@ -459,7 +459,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                 ): bool,
                                 probatio.Optional(
                                     CONF_VLAN_SENSORS,
-                                    default=self.options.get(CONF_VLAN_SENSORS, []),
+                                    default=self.hub.config.option_vlan_sensors,
                                 ): SelectSelector(
                                     SelectSelectorConfig(
                                         options=vlan_options,
