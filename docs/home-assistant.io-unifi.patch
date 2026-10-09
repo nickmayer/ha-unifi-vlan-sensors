@@ -1,0 +1,27 @@
+--- a/source/_integrations/unifi.markdown
++++ b/source/_integrations/unifi.markdown
+@@ -132,6 +132,8 @@
+   description: "Create bandwidth usage sensors for network clients. Disabled by default."
+ Uptime sensors for network clients:
+   description: "Create uptime sensors for network clients. Disabled by default."
++VLANs to create sensors for:
++  description: "Select the VLANs to create [client count and traffic sensors](#vlan-sensors) for. Select `native` for clients without a VLAN tag. You can also enter the ID of a VLAN that has no clients yet. No VLAN sensors are created by default."
+ Create entities from network clients:
+   description: "Select which network clients to create entities from."
+ {% endconfiguration_basic %}
+@@ -229,6 +231,15 @@
+ 
+ Entities reporting connected clients to a WLAN.
+ 
++### VLAN sensors
++
++For each VLAN selected in the **VLANs to create sensors for** option, a device is created with two sensors:
++
++- **Clients**: the number of clients currently connected on the VLAN.
++- **Traffic**: the total data transfer of those clients in megabits per second (Mbit/s).
++
++These sensors summarize the clients of a VLAN without creating entities for the individual clients. A client is counted as connected using the same rule as for presence detection, based on the time in seconds from last seen until considered away. Clients without a VLAN tag are reported on the **Native VLAN** device.
++
+ ### Uptime sensor
+ 
+ Get entities reporting uptime per network client or UniFi Network device.

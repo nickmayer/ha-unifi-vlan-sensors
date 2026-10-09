@@ -28,6 +28,7 @@ from ..const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONF_VLAN_SENSORS,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
@@ -38,6 +39,16 @@ from ..const import (
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
 )
+
+
+def _vlan_sensors_option(value: list[str] | str) -> list[str]:
+    """Return the VLANs option as a list.
+
+    Release 2026.10.0-vlan.1 of this custom component saved it as comma separated text.
+    """
+    if isinstance(value, str):
+        return value.lower().replace(",", " ").split()
+    return value
 
 
 @dataclass
@@ -86,6 +97,8 @@ class UnifiConfig:
     """Config entry option to allow bandwidth sensors."""
     option_allow_uptime_sensors: bool
     """Config entry option to allow uptime sensors."""
+    option_vlan_sensors: list[str]
+    """Config entry option with VLAN IDs to create client count and traffic sensors for."""
 
     @classmethod
     def from_config_entry(cls, config_entry: ConfigEntry) -> Self:
@@ -125,5 +138,8 @@ class UnifiConfig:
             ),
             option_allow_uptime_sensors=options.get(
                 CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
+            ),
+            option_vlan_sensors=_vlan_sensors_option(
+                options.get(CONF_VLAN_SENSORS, [])
             ),
         )
