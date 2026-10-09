@@ -1,0 +1,28 @@
+diff --git a/tests/components/unifi/test_config_flow.py b/tests/components/unifi/test_config_flow.py
+index f2332058..30cb34fc 100644
+--- a/tests/components/unifi/test_config_flow.py
++++ b/tests/components/unifi/test_config_flow.py
+@@ -24,6 +24,7 @@ from homeassistant.components.unifi.const import (
+     CONF_TRACK_CLIENTS,
+     CONF_TRACK_DEVICES,
+     CONF_TRACK_WIRED_CLIENTS,
++    CONF_VLAN_SENSORS,
+     DOMAIN,
+ )
+ from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+@@ -502,6 +503,7 @@ async def test_option_flow(
+                 CONF_DPI_RESTRICTIONS: False,
+                 CONF_ALLOW_BANDWIDTH_SENSORS: True,
+                 CONF_ALLOW_UPTIME_SENSORS: True,
++                CONF_VLAN_SENSORS: "11, 12",
+             },
+         },
+     )
+@@ -520,6 +522,7 @@ async def test_option_flow(
+         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
+         CONF_ALLOW_BANDWIDTH_SENSORS: True,
+         CONF_ALLOW_UPTIME_SENSORS: True,
++        CONF_VLAN_SENSORS: "11, 12",
+     }
+ 
+ 

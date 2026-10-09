@@ -53,7 +53,9 @@ from .const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONF_VLAN_SENSORS,
     DEFAULT_DPI_RESTRICTIONS,
+    DEFAULT_VLAN_SENSORS,
     DOMAIN,
 )
 from .errors import AuthenticationRequired, CannotConnect
@@ -409,6 +411,12 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                     CONF_ALLOW_UPTIME_SENSORS,
                                     default=self.hub.config.option_allow_uptime_sensors,
                                 ): bool,
+                                probatio.Optional(
+                                    CONF_VLAN_SENSORS,
+                                    default=self.options.get(
+                                        CONF_VLAN_SENSORS, DEFAULT_VLAN_SENSORS
+                                    ),
+                                ): str,
                             }
                         ),
                         SectionConfig(collapsed=True),
