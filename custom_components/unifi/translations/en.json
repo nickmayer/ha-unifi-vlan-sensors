@@ -165,6 +165,9 @@
       "vlan_clients": {
         "name": "Clients"
       },
+      "vlan_leases": {
+        "name": "Leases"
+      },
       "vlan_traffic": {
         "name": "Traffic"
       },
