@@ -1,0 +1,7 @@
+{
+  "name": "UniFi Network (with VLAN sensors)",
+  "render_readme": true,
+  "zip_release": true,
+  "filename": "unifi.zip",
+  "homeassistant": "2026.10.0"
+}

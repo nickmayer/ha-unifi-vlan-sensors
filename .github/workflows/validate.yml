@@ -1,0 +1,37 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: JSON files parse
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          for p in pathlib.Path("custom_components/unifi").rglob("*.json"):
+              json.loads(p.read_text(encoding="utf-8"))
+              print("ok", p)
+          json.loads(pathlib.Path("hacs.json").read_text())
+          PY
+      - name: Python compiles
+        run: python3 -m compileall -q custom_components/unifi
+      - name: Upstream branch is not edited by hand
+        run: |
+          git fetch origin upstream:refs/remotes/origin/upstream || true
+          git log -1 --format=%s origin/upstream 2>/dev/null || true
+
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration
+          ignore: brands
