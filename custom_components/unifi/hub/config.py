@@ -41,6 +41,16 @@ from ..const import (
 )
 
 
+def _vlan_sensors_option(value: list[str] | str) -> list[str]:
+    """Return the VLANs option as a list.
+
+    Release 2026.10.0-vlan.1 of this custom component saved it as comma separated text.
+    """
+    if isinstance(value, str):
+        return value.lower().replace(",", " ").split()
+    return value
+
+
 @dataclass
 class UnifiConfig:
     """Represent a UniFi config entry."""
@@ -129,5 +139,7 @@ class UnifiConfig:
             option_allow_uptime_sensors=options.get(
                 CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
             ),
-            option_vlan_sensors=options.get(CONF_VLAN_SENSORS, []),
+            option_vlan_sensors=_vlan_sensors_option(
+                options.get(CONF_VLAN_SENSORS, [])
+            ),
         )
