@@ -25,6 +25,7 @@ from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
 from .config import UnifiConfig
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
+from .vlan_leases import VlanLeases
 from .websocket import UnifiWebsocket
 
 if TYPE_CHECKING:
@@ -45,6 +46,7 @@ class UnifiHub:
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
         self.entity_loader = UnifiEntityLoader(self)
+        self.vlan_leases = VlanLeases(api)
         self._entity_helper = UnifiEntityHelper(hass, api)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 

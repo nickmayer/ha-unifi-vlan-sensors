@@ -34,6 +34,10 @@ Home Assistant will log that it found a custom integration `unifi`; that is expe
 
 This release requires `aiounifi==97` (Home Assistant 2026.10.0 itself pins 96; Home Assistant installs the version this integration asks for when it restarts). aiounifi 97 has a handler for the controller's network configuration (`hub.api.networks`, which also receives the `networkconf:sync` websocket updates). It is used for the names in the options list and the device names; the sensors are still keyed by VLAN ID, so entity IDs do not depend on network names. If the controller reports no networks, everything falls back to plain VLAN IDs.
 
+### Leases
+
+Each VLAN also gets a **Leases** sensor with the state `online/leases`, for example `15/19`: clients that are online on the VLAN, out of the active DHCP leases of its network. Attributes `online`, `leases` and `max_leases` hold the numbers. The lease counts come from the controller's LAN overview (`/v2/api/site/<site>/lan/enriched-configuration`), requested at most every 20 seconds for all VLAN sensors together; the sensor is unknown if the controller reports no lease data for the network.
+
 ### Upgrading from `2026.10.0-vlan.1`
 
 Release 1 saved the VLAN list as comma separated text. Release 2 still reads that format, so nothing breaks; open the options once and save to convert it to the new list.

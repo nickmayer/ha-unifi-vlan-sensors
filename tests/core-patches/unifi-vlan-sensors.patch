@@ -441,7 +441,7 @@ index 9fbdef4d..81913135 100644
 +    ]
 +    await config_entry_factory()
 +
-+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
++    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 9
 +    assert hass.states.get("sensor.vlan_11_clients").state == "2"
 +    assert hass.states.get("sensor.vlan_11_traffic").state == "4.0"
 +    assert hass.states.get("sensor.vlan_12_clients").state == "0"

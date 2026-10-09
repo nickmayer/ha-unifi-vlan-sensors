@@ -1,25 +1,35 @@
 --- a/tests/components/unifi/conftest.py
 +++ b/tests/components/unifi/conftest.py
-@@ -179,6 +179,7 @@
+@@ -179,6 +179,8 @@
      dpi_app_payload: list[dict[str, Any]],
      dpi_group_payload: list[dict[str, Any]],
      firewall_policy_payload: list[dict[str, Any]],
 +    network_payload: list[dict[str, Any]],
++    lan_overview_payload: list[dict[str, Any]],
      object_oriented_network_config_payload: list[dict[str, Any]],
      port_forward_payload: list[dict[str, Any]],
      traffic_rule_payload: list[dict[str, Any]],
-@@ -229,6 +230,7 @@
+@@ -229,6 +230,10 @@
          mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
          mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
          mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
 +        mock_get_request(f"/api/s/{site_id}/rest/networkconf", network_payload)
++        mock_get_request(
++            f"/v2/api/site/{site_id}/lan/enriched-configuration", lan_overview_payload
++        )
          mock_get_request(f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload)
          mock_get_request(f"/v2/api/site/{site_id}/trafficroutes", traffic_route_payload)
  
-@@ -326,6 +328,12 @@
+@@ -326,6 +330,18 @@
      return []
  
  
++@pytest.fixture(name="lan_overview_payload")
++def fixture_lan_overview_data() -> list[dict[str, Any]]:
++    """LAN overview data."""
++    return []
++
++
 +@pytest.fixture(name="network_payload")
 +def fixture_network_data() -> list[dict[str, Any]]:
 +    """Network data."""

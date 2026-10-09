@@ -17,10 +17,13 @@ async def test_vlan_option_saved_as_text(hass: HomeAssistant) -> None:
     """Verify a text option creates sensors for the listed VLANs only."""
     assert sorted(hass.states.async_entity_ids(SENSOR_DOMAIN)) == [
         "sensor.native_vlan_clients",
+        "sensor.native_vlan_leases",
         "sensor.native_vlan_traffic",
         "sensor.vlan_11_clients",
+        "sensor.vlan_11_leases",
         "sensor.vlan_11_traffic",
         "sensor.vlan_12_clients",
+        "sensor.vlan_12_leases",
         "sensor.vlan_12_traffic",
     ]
 

@@ -68,6 +68,7 @@ from .entity import (
     is_locally_administered_mac,
 )
 from .hub import UnifiHub
+from .hub.vlan_leases import NetworkLeases
 
 PARALLEL_UPDATES = 0
 
@@ -1002,6 +1003,7 @@ class UnifiVlanSensorEntityDescription(SensorEntityDescription):
     """Class describing UniFi VLAN sensor entity."""
 
     value_fn: Callable[[UnifiHub, list[Client]], float | int]
+    shows_leases: bool = False
 
 
 VLAN_ENTITY_DESCRIPTIONS: tuple[UnifiVlanSensorEntityDescription, ...] = (
@@ -1020,6 +1022,12 @@ VLAN_ENTITY_DESCRIPTIONS: tuple[UnifiVlanSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         value_fn=async_vlan_traffic_value_fn,
     ),
+    UnifiVlanSensorEntityDescription(
+        key="VLAN leases",
+        translation_key="vlan_leases",
+        value_fn=async_vlan_clients_value_fn,
+        shows_leases=True,
+    ),
 )
 
 
@@ -1036,7 +1044,9 @@ def async_setup_vlan_sensors(
     def add_vlan_sensors() -> None:
         """Add sensors for VLANs that were added to the options."""
         async_add_entities(
-            UnifiVlanSensor(hub, vlan, description)
+            (UnifiVlanLeasesSensor if description.shows_leases else UnifiVlanSensor)(
+                hub, vlan, description
+            )
             for vlan in hub.config.option_vlan_sensors
             for description in VLAN_ENTITY_DESCRIPTIONS
             if (description.key, vlan) not in hub.entity_loader.known_objects
@@ -1128,3 +1138,39 @@ class UnifiVlanSensor(SensorEntity):
         """Config entry options are updated, remove entity if VLAN was removed."""
         if self.vlan not in self.hub.config.option_vlan_sensors:
             er.async_get(self.hass).async_remove(self.entity_id)
+
+
+class UnifiVlanLeasesSensor(UnifiVlanSensor):
+    """Clients that are online on a VLAN, out of the active DHCP leases of its network."""
+
+    @override
+    async def async_update(self) -> None:
+        """Refresh the lease counts of the site."""
+        await self.hub.vlan_leases.async_update()
+
+    @property
+    def _leases(self) -> NetworkLeases | None:
+        """Return the DHCP leases of the network of this VLAN."""
+        network = find_network_by_vlan(self.hub.api.networks, self.vlan)
+        return self.hub.vlan_leases.get(network.id) if network else None
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return online clients and active leases, like 3/10."""
+        if (leases := self._leases) is None:
+            return None
+        online = super().native_value
+        return f"{online}/{leases.active}"
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, int] | None:
+        """Return the numbers behind the state."""
+        if (leases := self._leases) is None:
+            return None
+        return {
+            "online": super().native_value,
+            "leases": leases.active,
+            "max_leases": leases.maximum,
+        }
