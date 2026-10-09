@@ -63,6 +63,7 @@ from .entity import (
     async_device_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
+    find_network_by_vlan,
     get_client_vlan,
     is_locally_administered_mac,
 )
@@ -1078,7 +1079,8 @@ class UnifiVlanSensor(SensorEntity):
 
     def _device_name(self) -> str:
         """Return the name of the network, or a generic name if it is unknown."""
-        if network := self.hub.networks.get_by_vlan_key(self.vlan):
+        network = find_network_by_vlan(self.hub.api.networks, self.vlan)
+        if network and network.name:
             return network.name
         return "Native VLAN" if self.vlan == VLAN_NATIVE else f"VLAN {self.vlan}"
 

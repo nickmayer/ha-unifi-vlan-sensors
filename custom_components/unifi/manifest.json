@@ -16,7 +16,7 @@
   ],
   "quality_scale": "silver",
   "requirements": [
-    "aiounifi==96"
+    "aiounifi==97"
   ],
   "version": "2026.10.0"
 }

@@ -1,8 +1,9 @@
-"""Tests of the UniFi networks handler and how VLAN sensors and options use it."""
+"""Tests of how VLAN sensors and options use the networks of aiounifi."""
 
 from typing import Any
 
 from aiounifi.models.message import MessageKey
+from aiounifi.models.network import Network
 import pytest
 
 from homeassistant.components.unifi.const import (
@@ -10,7 +11,10 @@ from homeassistant.components.unifi.const import (
     CONF_VLAN_SENSORS,
     DOMAIN,
 )
-from homeassistant.components.unifi.hub.networks import Network
+from homeassistant.components.unifi.entity import (
+    find_network_by_vlan,
+    get_network_vlan,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -57,36 +61,31 @@ NETWORKS = [DEFAULT, NOAH, GUEST, DISABLED, WAN, VPN]
 
 
 @pytest.mark.parametrize(
-    ("payload", "vlan", "vlan_key", "enabled"),
+    ("payload", "vlan_key"),
     [
-        pytest.param(DEFAULT, None, "native", True, id="default network"),
-        pytest.param(NOAH, 11, "11", True, id="tagged network"),
-        pytest.param(GUEST, 30, "30", True, id="vlan as text"),
-        pytest.param(DISABLED, 40, "40", False, id="disabled network"),
-        pytest.param(WAN, None, None, True, id="wan"),
-        pytest.param(VPN, None, None, True, id="vpn"),
-        pytest.param({**NOAH, "vlan": "abc"}, None, None, True, id="unreadable vlan"),
+        pytest.param(DEFAULT, "native", id="default network"),
+        pytest.param(NOAH, "11", id="tagged network"),
+        pytest.param(GUEST, "30", id="vlan as text"),
+        pytest.param(DISABLED, "40", id="disabled network"),
+        pytest.param(WAN, None, id="wan"),
+        pytest.param(VPN, None, id="vpn"),
+        pytest.param({**NOAH, "vlan": "abc"}, None, id="unreadable vlan"),
         pytest.param(
             {"_id": "x", "name": "x", "purpose": "vlan-only", "vlan_enabled": True},
             None,
-            None,
-            True,
             id="vlan missing",
         ),
     ],
 )
-def test_network_model(
-    payload: dict[str, Any], vlan: int | None, vlan_key: str | None, enabled: bool
-) -> None:
+def test_network_model(payload: dict[str, Any], vlan_key: str | None) -> None:
     """Test the properties of a network."""
     network = Network(payload)
 
     assert network.id == payload["_id"]
     assert network.name == payload["name"]
     assert network.purpose == payload["purpose"]
-    assert network.vlan == vlan
-    assert network.vlan_key == vlan_key
-    assert network.enabled is enabled
+    assert get_network_vlan(network) == vlan_key
+    assert network.enabled is payload.get("enabled")
 
 
 @pytest.mark.parametrize("network_payload", [NETWORKS])
@@ -94,14 +93,14 @@ async def test_networks_handler(
     config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test networks are loaded and found by VLAN."""
-    networks = config_entry_setup.runtime_data.networks
+    networks = config_entry_setup.runtime_data.api.networks
 
     assert set(networks) == {network["_id"] for network in NETWORKS}
-    assert networks.get_by_vlan_key("11").name == "noah_vlan11"
-    assert networks.get_by_vlan_key("30").name == "guest_vlan30"
-    assert networks.get_by_vlan_key("native").name == "Default"
-    assert networks.get_by_vlan_key("40") is None
-    assert networks.get_by_vlan_key("99") is None
+    assert find_network_by_vlan(networks, "11").name == "noah_vlan11"
+    assert find_network_by_vlan(networks, "30").name == "guest_vlan30"
+    assert find_network_by_vlan(networks, "native").name == "Default"
+    assert find_network_by_vlan(networks, "40") is None
+    assert find_network_by_vlan(networks, "99") is None
 
 
 @pytest.mark.parametrize("network_payload", [[NOAH]])
@@ -110,7 +109,7 @@ async def test_networks_websocket_update(
     mock_websocket_message: WebsocketMessageMock,
 ) -> None:
     """Test networks follow changes sent by the controller."""
-    networks = config_entry_setup.runtime_data.networks
+    networks = config_entry_setup.runtime_data.api.networks
     assert networks["id-noah"].name == "noah_vlan11"
 
     mock_websocket_message(
@@ -119,7 +118,7 @@ async def test_networks_websocket_update(
     mock_websocket_message(message=MessageKey.NETWORK_CONF_UPDATED, data=GUEST)
 
     assert networks["id-noah"].name == "renamed"
-    assert networks.get_by_vlan_key("30").name == "guest_vlan30"
+    assert find_network_by_vlan(networks, "30").name == "guest_vlan30"
 
 
 @pytest.mark.parametrize(

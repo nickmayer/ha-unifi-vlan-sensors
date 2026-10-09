@@ -13,7 +13,9 @@ from aiounifi.interfaces.api_handlers import (
     UnsubscribeType,
 )
 from aiounifi.models.api import ApiItem
+from aiounifi.interfaces.networks import Networks
 from aiounifi.models.client import Client
+from aiounifi.models.network import Network
 from aiounifi.models.event import Event, EventKey
 
 from homeassistant.core import callback
@@ -33,6 +35,37 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 type SubscriptionType = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+
+
+LAN_PURPOSES = ("corporate", "guest", "vlan-only")
+"""Purposes of networks that clients can connect to (not WAN or VPN)."""
+
+
+def get_network_vlan(network: Network) -> str | None:
+    """Return the VLAN key clients on a network have: the VLAN ID, or native if untagged.
+
+    None for networks clients cannot connect to, such as WAN and VPN.
+    """
+    if network.raw.get("vlan_enabled"):
+        try:
+            return str(int(network.raw["vlan"]))
+        except KeyError, ValueError:
+            return None
+    if network.purpose in LAN_PURPOSES:
+        return VLAN_NATIVE
+    return None
+
+
+def find_network_by_vlan(networks: Networks, vlan: str) -> Network | None:
+    """Return the enabled network with this VLAN key."""
+    return next(
+        (
+            network
+            for network in networks.values()
+            if network.enabled is not False and get_network_vlan(network) == vlan
+        ),
+        None,
+    )
 
 
 def get_client_vlan(client: Client) -> str:

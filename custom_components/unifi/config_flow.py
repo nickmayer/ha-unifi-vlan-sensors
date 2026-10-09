@@ -64,7 +64,7 @@ from .const import (
     DOMAIN,
     VLAN_NATIVE,
 )
-from .entity import get_client_vlan
+from .entity import get_client_vlan, get_network_vlan
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 
@@ -377,9 +377,10 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         ]
 
         vlan_labels = {
-            network.vlan_key: f"{network.name} ({network.vlan_key})"
-            for network in self.hub.networks.values()
-            if network.enabled and network.vlan_key is not None
+            vlan: f"{network.name} ({vlan})"
+            for network in self.hub.api.networks.values()
+            if network.enabled is not False
+            and (vlan := get_network_vlan(network)) is not None
         }
         known_vlans = {
             get_client_vlan(client) for client in self.hub.api.clients.values()
