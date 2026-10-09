@@ -50,10 +50,18 @@ Release 1 saved the VLAN list as comma separated text. Release 2 still reads tha
 | Release / HACS version | `<HA version>-vlan.<n>` | `2026.10.0-vlan.1` |
 | Upstream snapshot (branch `upstream`) | tag `upstream/<HA version>` | `upstream/2026.10.0` |
 
-The repository has two long-lived branches:
+The repository has four long-lived branches:
 
-- **`upstream`** — an untouched copy of `homeassistant/components/unifi` from each Home Assistant release (plus the two files a custom integration needs: a `version` in the manifest and the generated `translations/en.json`). Never edited by hand. Each release is a commit tagged `upstream/<version>`.
-- **`main`** — `upstream` plus our changes. `git diff upstream/2026.10.0 main -- custom_components/unifi` is exactly the patch.
+| Branch | Content | Installable |
+| --- | --- | --- |
+| `upstream` | An untouched copy of `homeassistant/components/unifi` from each Home Assistant **release** (plus the two files a custom integration needs: a `version` in the manifest and the generated `translations/en.json`). Never edited by hand. Each release is a commit tagged `upstream/<version>`. | no |
+| `main` | `upstream` plus our changes, for the latest release. This is what the `<version>-vlan.<n>` releases are built from. | yes, on that Home Assistant release |
+| `upstream-dev` | The same kind of untouched copy, of Home Assistant's `dev` branch, branching from `upstream`. Commits are tagged `upstream/dev-<sha7>`. | no |
+| `dev` | `upstream-dev` plus our changes: the work for the next release, and the base to rebase the core pull request on. | **no** |
+
+`git diff upstream/2026.10.0 main -- custom_components/unifi` is exactly our patch for a release.
+
+> **Do not install `dev` on a released Home Assistant.** It tracks unreleased core code and can need core APIs the release does not have. For example, `dev` imports `async_noop` from `homeassistant.core`, which 2026.10.0 does not have, so UniFi would fail to load.
 
 ### Syncing a new Home Assistant release
 
@@ -66,6 +74,13 @@ git push origin main upstream --tags                                 # the tag t
 ```
 
 `--core` is any checkout of `home-assistant/core`; the script fetches the tag itself and never touches its working tree.
+
+To follow `dev` instead (it creates `upstream-dev`, then merge it into `dev`):
+
+```bash
+python scripts/sync_upstream.py --core ../ha-core --ref dev --branch
+git checkout dev && git merge upstream-dev
+```
 
 ### Proposing it upstream
 
