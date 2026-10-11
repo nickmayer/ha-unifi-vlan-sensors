@@ -51,13 +51,12 @@ def _overview(leases: int) -> list[dict[str, Any]]:
 async def test_vlan_leases_sensor(
     hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
-    """Test online clients are shown out of the active leases."""
+    """Test the active leases are the state, with the online clients as attribute."""
     await async_update_entity(hass, "sensor.noah_vlan11_leases")
     state = hass.states.get("sensor.noah_vlan11_leases")
 
-    assert state.state == "1/3"
+    assert state.state == "3"
     assert state.attributes["online"] == 1
-    assert state.attributes["leases"] == 3
     assert state.attributes["max_leases"] == 249
 
     # A VLAN without a network, or without lease data from the controller

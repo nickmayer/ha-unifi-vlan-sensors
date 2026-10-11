@@ -1,6 +1,6 @@
---- a/tests/components/unifi/snapshots/test_sensor.ambr	2026-10-09 16:03:51.179425988 -0600
-+++ b/tests/components/unifi/snapshots/test_sensor.ambr	2026-10-09 16:03:51.179425988 -0600
-@@ -2573,6 +2573,56 @@
+--- a/tests/components/unifi/snapshots/test_sensor.ambr	2026-10-11 13:18:34.679620241 -0600
++++ b/tests/components/unifi/snapshots/test_sensor.ambr	2026-10-11 13:18:34.683620241 -0600
+@@ -2573,6 +2573,59 @@
      'state': '1',
    })
  # ---
@@ -10,7 +10,9 @@
 +      None,
 +    ]),
 +    'area_id': None,
-+    'capabilities': None,
++    'capabilities': dict({
++      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
++    }),
 +    'config_entry_id': <ANY>,
 +    'config_subentry_id': <ANY>,
 +    'device_class': None,
@@ -45,6 +47,7 @@
 +  StateSnapshot({
 +    'attributes': ReadOnlyDict({
 +      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Native VLAN Leases',
++      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
 +    }),
 +    'context': <ANY>,
 +    'entity_id': 'sensor.native_vlan_leases',
@@ -57,7 +60,7 @@
  # name: test_vlan_sensor_entity_and_device_data[config_entry_options0][sensor.native_vlan_traffic-entry]
    EntityRegistryEntrySnapshot({
      'aliases': list([
-@@ -2684,6 +2734,56 @@
+@@ -2684,6 +2737,59 @@
      'state': '1',
    })
  # ---
@@ -67,7 +70,9 @@
 +      None,
 +    ]),
 +    'area_id': None,
-+    'capabilities': None,
++    'capabilities': dict({
++      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
++    }),
 +    'config_entry_id': <ANY>,
 +    'config_subentry_id': <ANY>,
 +    'device_class': None,
@@ -102,6 +107,7 @@
 +  StateSnapshot({
 +    'attributes': ReadOnlyDict({
 +      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VLAN 11 Leases',
++      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
 +    }),
 +    'context': <ANY>,
 +    'entity_id': 'sensor.vlan_11_leases',

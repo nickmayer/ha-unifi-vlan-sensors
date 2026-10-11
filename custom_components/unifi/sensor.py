@@ -1025,6 +1025,7 @@ VLAN_ENTITY_DESCRIPTIONS: tuple[UnifiVlanSensorEntityDescription, ...] = (
     UnifiVlanSensorEntityDescription(
         key="VLAN leases",
         translation_key="vlan_leases",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=async_vlan_clients_value_fn,
         shows_leases=True,
     ),
@@ -1141,7 +1142,7 @@ class UnifiVlanSensor(SensorEntity):
 
 
 class UnifiVlanLeasesSensor(UnifiVlanSensor):
-    """Clients that are online on a VLAN, out of the active DHCP leases of its network."""
+    """Active DHCP leases of the network of a VLAN, with the online clients as attribute."""
 
     @override
     async def async_update(self) -> None:
@@ -1156,12 +1157,11 @@ class UnifiVlanLeasesSensor(UnifiVlanSensor):
 
     @property
     @override
-    def native_value(self) -> str | None:
-        """Return online clients and active leases, like 3/10."""
+    def native_value(self) -> int | None:
+        """Return the active DHCP leases."""
         if (leases := self._leases) is None:
             return None
-        online = super().native_value
-        return f"{online}/{leases.active}"
+        return leases.active
 
     @property
     @override
@@ -1171,6 +1171,5 @@ class UnifiVlanLeasesSensor(UnifiVlanSensor):
             return None
         return {
             "online": super().native_value,
-            "leases": leases.active,
             "max_leases": leases.maximum,
         }

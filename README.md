@@ -36,7 +36,7 @@ This release requires `aiounifi==97` (Home Assistant 2026.10.0 itself pins 96; H
 
 ### Leases
 
-Each VLAN also gets a **Leases** sensor with the state `online/leases`, for example `15/19`: clients that are online on the VLAN, out of the active DHCP leases of its network. Attributes `online`, `leases` and `max_leases` hold the numbers. The lease counts come from the controller's LAN overview (`/v2/api/site/<site>/lan/enriched-configuration`), requested at most every 20 seconds for all VLAN sensors together; the sensor is unknown if the controller reports no lease data for the network.
+Each VLAN also gets a **Leases** sensor: the number of active DHCP leases of its network, with the clients that are online on the VLAN in the attribute `online` (and the size of the DHCP pool in `max_leases`), so it can be shown as `online/leases` such as `15/19` and graphed. The lease counts come from the controller's LAN overview (`/v2/api/site/<site>/lan/enriched-configuration`), requested at most every 20 seconds for all VLAN sensors together; the sensor is unknown if the controller reports no lease data for the network.
 
 ### Upgrading from `2026.10.0-vlan.1`
 
