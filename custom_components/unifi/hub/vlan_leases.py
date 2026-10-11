@@ -3,6 +3,7 @@
 aiounifi has no handler for the controller's LAN overview, so it is requested here.
 """
 
+import asyncio
 from dataclasses import dataclass
 import time
 from typing import TYPE_CHECKING
@@ -42,25 +43,28 @@ class VlanLeases:
         self._api = api
         self._leases: dict[str, NetworkLeases] = {}
         self._updated = float("-inf")
+        self._lock = asyncio.Lock()
 
     async def async_update(self) -> None:
         """Refresh the lease counts unless they were refreshed a moment ago."""
-        if time.monotonic() - self._updated < CACHE_SECONDS:
-            return
-        self._updated = time.monotonic()
+        # Sensors update at the same time: the others wait for the request in flight
+        async with self._lock:
+            if time.monotonic() - self._updated < CACHE_SECONDS:
+                return
 
-        response = await self._api.request(VlanLeaseRequest.create())
-        leases: dict[str, NetworkLeases] = {}
-        for item in response.get("data", []):
-            statistics = item.get("statistics", {})
-            network_id = item.get("configuration", {}).get("_id")
-            if network_id is None or "dhcp_active_leases" not in statistics:
-                continue
-            leases[network_id] = NetworkLeases(
-                active=statistics["dhcp_active_leases"],
-                maximum=statistics.get("dhcp_max_leases", 0),
-            )
-        self._leases = leases
+            response = await self._api.request(VlanLeaseRequest.create())
+            leases: dict[str, NetworkLeases] = {}
+            for item in response.get("data", []):
+                statistics = item.get("statistics", {})
+                network_id = item.get("configuration", {}).get("_id")
+                if network_id is None or "dhcp_active_leases" not in statistics:
+                    continue
+                leases[network_id] = NetworkLeases(
+                    active=statistics["dhcp_active_leases"],
+                    maximum=statistics.get("dhcp_max_leases", 0),
+                )
+            self._leases = leases
+            self._updated = time.monotonic()
 
     def get(self, network_id: str) -> NetworkLeases | None:
         """Return the lease counts of a network, None if the controller has none."""
