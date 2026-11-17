@@ -4,7 +4,7 @@ This is Home Assistant's built-in **UniFi Network** integration with one additio
 
 It is a *drop-in replacement* for the built-in integration: same domain (`unifi`), same config entry, same entities. Everything else behaves exactly like upstream. The change is small and meant to be proposed upstream as a pull request.
 
-> **Built for Home Assistant 2026.10.x.** Because this replaces the built-in integration, it must match your Home Assistant version. When you update Home Assistant, update this too (see [Versions](#versions)). HACS cannot enforce an upper version bound.
+> **Built for Home Assistant 2026.11.2.** Because this replaces the built-in integration, it must match your Home Assistant version. When you update Home Assistant, update this too (see [Versions](#versions)). HACS cannot enforce an upper version bound.
 
 ## What you get
 
@@ -32,7 +32,7 @@ Home Assistant will log that it found a custom integration `unifi`; that is expe
 
 ### Networks
 
-This release requires `aiounifi==97` (Home Assistant 2026.10.0 itself pins 96; Home Assistant installs the version this integration asks for when it restarts). aiounifi 97 has a handler for the controller's network configuration (`hub.api.networks`, which also receives the `networkconf:sync` websocket updates). It is used for the names in the options list and the device names; the sensors are still keyed by VLAN ID, so entity IDs do not depend on network names. If the controller reports no networks, everything falls back to plain VLAN IDs.
+This release uses `aiounifi==98`, the same version Home Assistant 2026.11.2 pins. aiounifi 97 and later have a handler for the controller's network configuration (`hub.api.networks`, which also receives the `networkconf:sync` websocket updates). It is used for the names in the options list and the device names; the sensors are still keyed by VLAN ID, so entity IDs do not depend on network names. If the controller reports no networks, everything falls back to plain VLAN IDs.
 
 ### Leases
 
@@ -58,9 +58,9 @@ The repository has four long-lived branches:
 | `upstream-dev` | The same kind of untouched copy, of Home Assistant's `dev` branch, branching from `upstream`. Commits are tagged `upstream/dev-<sha7>`. | no |
 | `dev` | `upstream-dev` plus our changes: the work for the next release, and the base to rebase the core pull request on. | **no** |
 
-`git diff upstream/2026.10.0 main -- custom_components/unifi` is exactly our patch for a release.
+`git diff upstream/2026.11.2 main -- custom_components/unifi` is exactly our patch for a release.
 
-> **Do not install `dev` on a released Home Assistant.** It tracks unreleased core code and can need core APIs the release does not have. For example, `dev` imports `async_noop` from `homeassistant.core`, which 2026.10.0 does not have, so UniFi would fail to load.
+> **Do not install `dev` on a released Home Assistant.** It tracks unreleased core code and can need core APIs the release does not have. For example, 2026.10 releases of this integration imported `UnitOfTemperature` from `homeassistant.components.sensor`, which 2026.11 removed, so UniFi failed to load after updating Home Assistant; the same happens the other way round when `dev` uses an API a release does not have yet.
 
 ### Syncing a new Home Assistant release
 

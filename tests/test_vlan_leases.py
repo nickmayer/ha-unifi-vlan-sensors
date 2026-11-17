@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 NOAH = {
     "_id": "id-noah",

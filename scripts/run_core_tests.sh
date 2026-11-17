@@ -22,7 +22,7 @@ rsync -a --delete \
 
 # 2. pristine unifi tests of the core release this integration is based on, then ours
 CORE_REPO="${CORE_REPO:-/mnt/d/source/ha-core}"   # any core clone that has the tag
-CORE_REF="${CORE_REF:-2026.10.0}"
+CORE_REF="${CORE_REF:-2026.11.2}"
 rm -rf "$CORE/tests/components/unifi"
 git -C "$CORE_REPO" archive "$CORE_REF" tests/components/unifi | tar -x -C "$CORE"
 for patch_file in "$REPO"/tests/core-patches/*.patch; do

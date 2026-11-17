@@ -6,7 +6,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.unifi.const import CONF_MORE_OPTIONS, CONF_VLAN_SENSORS
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

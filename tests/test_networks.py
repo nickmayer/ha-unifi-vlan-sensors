@@ -20,7 +20,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import ConfigEntryFactoryType, WebsocketMessageMock
 
-from tests.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 SITE = "site_id"
 

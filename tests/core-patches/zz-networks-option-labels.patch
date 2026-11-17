@@ -1,6 +1,8 @@
+diff --git a/tests/components/unifi/test_config_flow.py b/tests/components/unifi/test_config_flow.py
+index 54a7d2b..ae12995 100644
 --- a/tests/components/unifi/test_config_flow.py
 +++ b/tests/components/unifi/test_config_flow.py
-@@ -554,7 +554,12 @@
+@@ -709,7 +709,12 @@ async def test_option_flow_vlan_sensor_choices(
          for key, value in more_options.schema.schema.items()
          if key == CONF_VLAN_SENSORS
      )

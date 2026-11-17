@@ -1,5 +1,5 @@
 diff --git a/tests/components/unifi/snapshots/test_sensor.ambr b/tests/components/unifi/snapshots/test_sensor.ambr
-index 05690d6b..c44faa34 100644
+index f93b9e7..ed4e7c8 100644
 --- a/tests/components/unifi/snapshots/test_sensor.ambr
 +++ b/tests/components/unifi/snapshots/test_sensor.ambr
 @@ -2520,3 +2520,225 @@
@@ -16,9 +16,9 @@ index 05690d6b..c44faa34 100644
 +      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
 +    }),
 +    'config_entry_id': <ANY>,
-+    'config_subentry_id': <ANY>,
++    'config_subentry_id': None,
 +    'device_class': None,
-+    'device_id': <ANY>,
++    'device_id': <DeviceEntry identifiers=[('unifi', 'vlan-site_id-native')]>,
 +    'disabled_by': None,
 +    'domain': 'sensor',
 +    'entity_category': None,
@@ -69,9 +69,9 @@ index 05690d6b..c44faa34 100644
 +      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
 +    }),
 +    'config_entry_id': <ANY>,
-+    'config_subentry_id': <ANY>,
++    'config_subentry_id': None,
 +    'device_class': None,
-+    'device_id': <ANY>,
++    'device_id': <DeviceEntry identifiers=[('unifi', 'vlan-site_id-native')]>,
 +    'disabled_by': None,
 +    'domain': 'sensor',
 +    'entity_category': None,
@@ -127,9 +127,9 @@ index 05690d6b..c44faa34 100644
 +      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
 +    }),
 +    'config_entry_id': <ANY>,
-+    'config_subentry_id': <ANY>,
++    'config_subentry_id': None,
 +    'device_class': None,
-+    'device_id': <ANY>,
++    'device_id': <DeviceEntry identifiers=[('unifi', 'vlan-site_id-11')]>,
 +    'disabled_by': None,
 +    'domain': 'sensor',
 +    'entity_category': None,
@@ -180,9 +180,9 @@ index 05690d6b..c44faa34 100644
 +      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
 +    }),
 +    'config_entry_id': <ANY>,
-+    'config_subentry_id': <ANY>,
++    'config_subentry_id': None,
 +    'device_class': None,
-+    'device_id': <ANY>,
++    'device_id': <DeviceEntry identifiers=[('unifi', 'vlan-site_id-11')]>,
 +    'disabled_by': None,
 +    'domain': 'sensor',
 +    'entity_category': None,
@@ -229,18 +229,18 @@ index 05690d6b..c44faa34 100644
 +  })
 +# ---
 diff --git a/tests/components/unifi/test_config_flow.py b/tests/components/unifi/test_config_flow.py
-index bede4057..6bd8daaf 100644
+index ecd2a87..54a7d2b 100644
 --- a/tests/components/unifi/test_config_flow.py
 +++ b/tests/components/unifi/test_config_flow.py
-@@ -24,6 +24,7 @@ from homeassistant.components.unifi.const import (
+@@ -28,6 +28,7 @@ from homeassistant.components.unifi.const import (
      CONF_TRACK_CLIENTS,
      CONF_TRACK_DEVICES,
      CONF_TRACK_WIRED_CLIENTS,
 +    CONF_VLAN_SENSORS,
      DOMAIN,
  )
- from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
-@@ -509,6 +510,7 @@ async def test_option_flow(
+ from homeassistant.components.unifi.errors import (
+@@ -646,6 +647,7 @@ async def test_option_flow(
                  CONF_DPI_RESTRICTIONS: False,
                  CONF_ALLOW_BANDWIDTH_SENSORS: True,
                  CONF_ALLOW_UPTIME_SENSORS: True,
@@ -248,12 +248,16 @@ index bede4057..6bd8daaf 100644
              },
          },
      )
-@@ -527,9 +529,95 @@ async def test_option_flow(
+@@ -664,6 +666,7 @@ async def test_option_flow(
          CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
          CONF_ALLOW_BANDWIDTH_SENSORS: True,
          CONF_ALLOW_UPTIME_SENSORS: True,
 +        CONF_VLAN_SENSORS: ["11", "12"],
      }
+ 
+ 
+@@ -678,6 +681,91 @@ async def test_option_flow_entry_not_loaded(hass: HomeAssistant) -> None:
+     assert result["reason"] == "integration_not_setup"
  
  
 +@pytest.mark.parametrize("config_entry_options", [{CONF_VLAN_SENSORS: ["30"]}])
@@ -345,10 +349,10 @@ index bede4057..6bd8daaf 100644
      """Verify positive run of UniFi discovery."""
      with patch("socket.gethostbyname", return_value="192.168.1.1"):
 diff --git a/tests/components/unifi/test_sensor.py b/tests/components/unifi/test_sensor.py
-index 9fbdef4d..81913135 100644
+index d41e72b..7d189c0 100644
 --- a/tests/components/unifi/test_sensor.py
 +++ b/tests/components/unifi/test_sensor.py
-@@ -27,8 +27,10 @@ from homeassistant.components.unifi.const import (
+@@ -31,8 +31,10 @@ from homeassistant.components.unifi.const import (
      CONF_TRACK_CLIENTS,
      CONF_TRACK_DEVICES,
      CONF_TRACK_WIRED_CLIENTS,
@@ -359,7 +363,7 @@ index 9fbdef4d..81913135 100644
  )
  from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
  from homeassistant.const import (
-@@ -2592,3 +2594,168 @@ async def test_device_uplink(
+@@ -2587,3 +2589,168 @@ async def test_device_uplink(
      device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
      mock_websocket_message(message=MessageKey.DEVICE, data=device)
      assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"
