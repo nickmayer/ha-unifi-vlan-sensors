@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 from aiounifi.models.api import ApiRequestV2
 
+from ..entity import get_network_config_vlan
+
 if TYPE_CHECKING:
     from aiounifi import Controller
 
@@ -36,7 +38,12 @@ class NetworkLeases:
 
 
 class VlanLeases:
-    """Lease counts per network ID, refreshed at most every few seconds."""
+    """Lease counts per VLAN key, refreshed at most every few seconds.
+
+    Keyed by VLAN rather than network ID: the overview carries the network
+    configuration, so it does not depend on the networks handler having the
+    same IDs (UniFi Network can change every network ID in an update).
+    """
 
     def __init__(self, api: Controller) -> None:
         """Initialize the cache."""
@@ -55,17 +62,24 @@ class VlanLeases:
             response = await self._api.request(VlanLeaseRequest.create())
             leases: dict[str, NetworkLeases] = {}
             for item in response.get("data", []):
-                statistics = item.get("statistics", {})
-                network_id = item.get("configuration", {}).get("_id")
-                if network_id is None or "dhcp_active_leases" not in statistics:
+                statistics = item.get("statistics") or {}
+                configuration = item.get("configuration") or {}
+                if (
+                    configuration.get("enabled") is False
+                    or "dhcp_active_leases" not in statistics
+                    or (vlan := get_network_config_vlan(configuration)) is None
+                ):
                     continue
-                leases[network_id] = NetworkLeases(
-                    active=statistics["dhcp_active_leases"],
-                    maximum=statistics.get("dhcp_max_leases", 0),
+                leases.setdefault(
+                    vlan,
+                    NetworkLeases(
+                        active=statistics["dhcp_active_leases"],
+                        maximum=statistics.get("dhcp_max_leases", 0),
+                    ),
                 )
             self._leases = leases
             self._updated = time.monotonic()
 
-    def get(self, network_id: str) -> NetworkLeases | None:
-        """Return the lease counts of a network, None if the controller has none."""
-        return self._leases.get(network_id)
+    def get(self, vlan: str) -> NetworkLeases | None:
+        """Return the lease counts of a VLAN, None if the controller has none."""
+        return self._leases.get(vlan)

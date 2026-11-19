@@ -1230,8 +1230,7 @@ class UnifiVlanLeasesSensor(UnifiVlanSensor):
     @property
     def _leases(self) -> NetworkLeases | None:
         """Return the DHCP leases of the network of this VLAN."""
-        network = find_network_by_vlan(self.hub.api.networks, self.vlan)
-        return self.hub.vlan_leases.get(network.id) if network else None
+        return self.hub.vlan_leases.get(self.vlan)
 
     @property
     @override

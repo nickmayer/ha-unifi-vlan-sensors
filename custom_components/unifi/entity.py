@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -46,12 +46,17 @@ def get_network_vlan(network: Network) -> str | None:
 
     None for networks clients cannot connect to, such as WAN and VPN.
     """
-    if network.raw.get("vlan_enabled"):
+    return get_network_config_vlan(network.raw)
+
+
+def get_network_config_vlan(config: Mapping[str, Any]) -> str | None:
+    """Return the VLAN key of a raw network configuration, see get_network_vlan."""
+    if config.get("vlan_enabled"):
         try:
-            return str(int(network.raw["vlan"]))
-        except KeyError, ValueError:
+            return str(int(config["vlan"]))
+        except KeyError, TypeError, ValueError:
             return None
-    if network.purpose in LAN_PURPOSES:
+    if config.get("purpose") in LAN_PURPOSES:
         return VLAN_NATIVE
     return None
 

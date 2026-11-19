@@ -49,6 +49,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         handler: HandlerT,
         *,
         disable_polling_on_endpoint_not_found: bool = False,
+        prune_vanished: bool = False,
     ) -> None:
         """Initialize coordinator."""
         supports_websocket = bool(handler.process_messages or handler.remove_messages)
@@ -66,6 +67,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             disable_polling_on_endpoint_not_found
         )
         self._endpoint_not_found_logged = False
+        self._prune_vanished = prune_vanished
         self._resync_task: asyncio.Task[None] | None = None
 
         hub.config.entry.async_on_unload(handler.subscribe(self._async_handle_update))
@@ -85,7 +87,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         """Update data from the API handler."""
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
-                await self._handler.update()
+                await self._async_fetch()
         except EndpointNotFound as err:
             if (
                 self._disable_polling_on_endpoint_not_found
@@ -144,13 +146,51 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         name = type(self._handler).__name__
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
-                await self._handler.update()
+                await self._async_fetch()
         except SESSION_CHECK_ERRORS as err:
             self._connection.verify_session(err)
         except aiounifi.AiounifiException as err:
             LOGGER.debug("Could not refetch UniFi %s data: %s", name, err)
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected error refetching UniFi %s data", name)
+
+    async def _async_fetch(self) -> None:
+        """Fetch all items of the handler.
+
+        aiounifi only adds and changes items on a fetch. With prune_vanished,
+        items the controller no longer lists are removed as well, so their
+        entities go away. UniFi Network can give every object a new ID in an
+        update; without this the old copies stay until the entry is reloaded.
+        Only for configuration objects: inactive clients drop out of the
+        client list but are kept on purpose.
+        """
+        handler = self._handler
+        if not self._prune_vanished:
+            await handler.update()
+            return
+
+        # aiounifi signals every item of the answer as added or changed
+        listed: set[str] = set()
+        unsubscribe = handler.subscribe(
+            lambda event, obj_id: listed.add(obj_id),
+            (ItemEvent.ADDED, ItemEvent.CHANGED),
+        )
+        try:
+            await handler.update()
+        finally:
+            unsubscribe()
+
+        if not listed:
+            # A starting application can list nothing for a moment, keep what we have
+            return
+        for obj_id, item in list(handler.items()):
+            if obj_id not in listed:
+                LOGGER.debug(
+                    "UniFi %s %s is no longer listed, removing it",
+                    type(handler).__name__,
+                    obj_id,
+                )
+                handler.remove_item(dict(item.raw))
 
     @callback
     def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:
