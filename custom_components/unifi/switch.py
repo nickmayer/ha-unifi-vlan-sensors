@@ -62,6 +62,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .qos_rules import QosRule, QosRules, qos_rules
 from .entity import (
     SubscriptionType,
     UnifiEntity,
@@ -156,6 +157,12 @@ def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if firewall policy can be controlled."""
     policy = hub.api.firewall_policies[obj_id]
     return not policy.predefined and policy.name != ""
+
+
+async def async_qos_rule_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
+    """Control QoS rule state."""
+    rules = qos_rules(hub.api)
+    await rules.enable(rules[obj_id], target)
 
 
 async def async_object_oriented_network_config_control_fn(
@@ -310,6 +317,19 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
         unique_id_fn=lambda hub, obj_id: f"firewall_policy-{obj_id}",
         supported_fn=async_firewall_policy_supported_fn,
+    ),
+    UnifiSwitchEntityDescription[QosRules, QosRule](
+        key="QoS rule control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        api_handler_fn=qos_rules,
+        control_fn=async_qos_rule_control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=lambda hub, rule: rule.enabled,
+        name_fn=lambda rule: rule.name,
+        object_fn=lambda api, obj_id: qos_rules(api)[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"qos_rule-{obj_id}",
+        supported_fn=lambda hub, obj_id: bool(qos_rules(hub.api)[obj_id].name),
     ),
     UnifiSwitchEntityDescription[
         ObjectOrientedNetworkConfigs, ObjectOrientedNetworkConfig

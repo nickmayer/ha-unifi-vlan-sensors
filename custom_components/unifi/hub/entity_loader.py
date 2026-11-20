@@ -27,6 +27,7 @@ from homeassistant.util import dt as dt_util
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UPDATE_TIMEOUT, UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
+from ..qos_rules import qos_rules
 from .connection import ACCOUNT_ERRORS, LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
@@ -70,6 +71,9 @@ class UnifiEntityLoader:
             id(hub.api.traffic_routes): config_coordinator(hub.api.traffic_routes),
             id(hub.api.wlans): config_coordinator(hub.api.wlans),
             id(hub.api.networks): config_coordinator(hub.api.networks),
+            id(qos_rules(hub.api)): config_coordinator(
+                qos_rules(hub.api), disable_polling_on_endpoint_not_found=True
+            ),
         }
         self._data_coordinator_aliases: dict[int, int] = {
             id(hub.api.outlets): id(hub.api.devices),

@@ -38,6 +38,12 @@ This release uses `aiounifi==98`, the same version Home Assistant 2026.11.2 pins
 
 Each VLAN also gets a **Leases** sensor: the number of active DHCP leases of its network, with the clients that are online on the VLAN in the attribute `online` (and the size of the DHCP pool in `max_leases`), so it can be shown as `online/leases` such as `15/19` and graphed. The lease counts come from the controller's LAN overview (`/v2/api/site/<site>/lan/enriched-configuration`), requested at most every 20 seconds for all VLAN sensors together; the sensor is unknown if the controller reports no lease data for the network.
 
+### QoS rules (throttle)
+
+When UniFi Network moves a site to the Policy Engine, traffic rules that blocked traffic become firewall policies, and the ones that limited bandwidth ("throttle") become **QoS rules**. Neither aiounifi nor the built-in integration knows QoS rules, so their switches disappear. This integration adds a switch for each QoS rule (`qos_rule-<id>`, named after the rule, like the firewall policy switches), read from `/v2/api/site/<site>/qos-rules` every 10 seconds and saved with a `PUT` of the whole rule. Controllers without QoS rules answer 404 and are not polled again.
+
+Such a migration, or any update that gives objects new IDs while Home Assistant is connected, also no longer leaves the old copies behind: networks, WLANs, rules, routes, port forwards, QoS rules and DPI groups the controller stops listing are removed with their entities on the next fetch.
+
 ### Upgrading from `2026.10.0-vlan.1`
 
 Release 1 saved the VLAN list as comma separated text. Release 2 still reads that format, so nothing breaks; open the options once and save to convert it to the new list.

@@ -23,6 +23,7 @@ from homeassistant.util import ssl as ssl_util
 
 from ..const import CONF_SITE_ID, LOGGER
 from ..errors import AuthenticationRequired, CannotConnect, MfaRequired
+from ..qos_rules import UnifiController
 
 
 async def get_unifi_api(
@@ -45,7 +46,7 @@ async def get_unifi_api(
             hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
 
-    api = aiounifi.Controller(
+    api = UnifiController(
         Configuration(
             session,
             host=config[CONF_HOST],
